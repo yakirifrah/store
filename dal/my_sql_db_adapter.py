@@ -86,7 +86,7 @@ class MySqlDBAdapter(BaseDbAdapter):
                 return json.dumps(
                     {
                         "STATUS": "SUCCESS",
-                        "CATEGORIES": result
+                        "PRODUCTS": result
                     })
         except Exception as e:
             return json.dumps({
