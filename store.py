@@ -3,10 +3,10 @@ from sys import argv
 import json
 import pymysql
 
+
 @get("/admin")
 def admin_portal():
-	return template("pages/admin.html")
-
+    return template("pages/admin.html")
 
 
 @get("/")
@@ -29,4 +29,4 @@ def images(filename):
     return static_file(filename, root='images')
 
 
-run(host='0.0.0.0', port=argv[1])
+run(host='localhost', port=4000, debug=True, reloader=True)

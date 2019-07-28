@@ -1,0 +1,4 @@
+autopep8==1.4.4
+bottle==0.12.17
+pycodestyle==2.5.0
+PyMySQL==0.9.3
