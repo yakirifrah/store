@@ -42,65 +42,89 @@ class MySqlDBAdapter(BaseDbAdapter):
             return json.dumps({'error': 'something is worng with the DB'})
 
     def add_product(self, product):
-        missing_paramenter = False
         category_not_found = False
+        title_exists = False
         if not product.category_id:
             category_not_found = True
-            raise "category not found"
+            return json.dumps({"STATUS": "ERROR", "MSG": "category not found"})
         if not product.title or not product.description or not product.price or not product.img_url or not product.category_id:
-            missing_paramenter = True
-            raise "missing parameters"
-        if not missing_paramenter and not category_not_found:
-            try:
-                print(
-                    f'title: {product.title} , desc: {product.description} , price:{product.price} , img_url:{product.img_url} , favorite:{product.favorite} , cat_id: {product.category_id} ')
-                with self._connection.cursor() as cursor:
-                    add_product = 'INSERT INTO products (title,description,price,img_url,favorite,category_id) VALUES(%(title)s,%(description)s,%(price)s,%(img_url)s,%(category_id)s)'
+            return json.dumps({"STATUS": "ERROR", "MSG": "Some parameters are missing"})
+        try:
+            with self._connection.cursor() as cursor:
+                products = json.loads(self.get_all_products())
+                for prod in products['PRODUCTS']:
+                    if product.title != prod["title"]:
+                        add_product = 'INSERT INTO products (title,description,price,img_url,favorite,category_id) VALUES(%(title)s,%(description)s,%(price)s,%(img_url)s,%(category_id)s)'
+                    else:
+                        title_exists = True
+                        prod_id = prod['id']
+                        update_product = 'UPDATE products set title = %(title)s,%(description)s,%(price)s,%(img_url)s,%(favorite)s WHERE id= %(prod_id)s'
+                        break
+                if not title_exists:
+                    print(type(product.price))
+                    print(product.price)
                     cursor.execute(add_product, {"title": product.title, "description": product.description, "price": product.price,
                                                  "img_url": product.img_url, "favorite": product.favorite, "category_id": product.category_id})
-                    id = cursor.lastrowid
-                    self._connection.commit()
-                    return json.dumps({
-                        "STATUS": "SUCCESS",
-                        "PRODUCT_ID": id
-                    })
-                    response.status_code = 201
-            except Exception as e:
-                return json.dumps({
-                    "STATUS": "ERROR",
-                    "MSG": f'{e}'
-                })
+                    # cursor.execute(add_product)
+                else:
+                    print(type(product.price))
+                    cursor.execute(update_product, {"title": product.title, "description": product.description,
+                                                    "price": float(product.price), "img_url": product.img_url, "prod_id": int(prod_id)})
+                self._connection.commit()
+                response.status = 201
+                return json.dumps({"STATUS": "SUCCESS", "MSG": "Product was added/updated successfully", "PRODUCT_ID": cursor.lastrowid})
+
+        except Exception as e:
+            return json.dumps({
+                "STATUS": "ERROR",
+                "MSG": f'{e}'
+            })
 
     def get_product(self, product_id):
-        return super().get_product(product_id)
+        try:
+            with self._connection.cursor() as cursor:
+                get_product = 'SELECT * FROM products WHERE id=%(product_id)s'
+                cursor.execute(get_product, {"product_id": product_id})
+                return json.dumps({"STATUS": "SUCCESS", "MSG": "The product was fetched successfully", "PRODUCT": cursor.fetchall()})
+        except Exception as e:
+            return json.dumps({
+                "STATUS": "ERROR",
+                "MSG": f'{e}'
+            })
 
     def delete_product(self, product_id):
-        return super().delete_product(product_id)
+        try:
+            with self._connection.cursor() as cursor:
+                del_product = "delete from products where id =%(product_id)s"
+                cursor.execute(del_product, {"product_id": product_id})
+                self.connection.commit()
+                response.status = 201
+                return json.dumps({"STATUS": "SUCCESS", "MSG": "The product was deleted successfully"})
+        except Exception as e:
+            return json.dumps({
+                "STATUS": "ERROR",
+                "MSG": f'{e}'
+            })
 
     def get_all_products(self):
         try:
             with self._connection.cursor() as cursor:
-                get_all_products = 'SELECT * FROM products'
+                get_all_products = 'select * from products'
                 cursor.execute(get_all_products)
                 result = cursor.fetchall()
-                return json.dumps(
-                    {
-                        "STATUS": "SUCCESS",
-                        "PRODUCTS": result
-                    })
+                return json.dumps({"STATUS": "SUCCESS", "MSG": "Products fetched", "PRODUCTS": result})
         except Exception as e:
-            return json.dumps({
-                "STATUS": "ERROR",
-                "MSG": f"{e}"
-            })
+            return json.dumps({"STATUS": "ERROR", "MSG": f"Internal Error{e}"})
 
     def get_products_by_category(self, category_id):
         try:
             with self._connection.cursor() as cursor:
-                get_product_by_category = 'SELECT * FROM products WHERE category_id=%s'
+                get_product_by_category = 'SELECT * FROM products WHERE category_id=%s ORDER BY id ASC, favorite DESC'
                 cursor.execute(get_product_by_category, category_id)
                 result = cursor.fetchall()
                 return json.dumps({
+                    "STATUS": "SUCCESS",
+                    "MSG": "Products fetched",
                     "PRODUCTS": result
                 })
 

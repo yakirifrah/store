@@ -7,5 +7,5 @@ class Product:
         self.description = description
         self.price = price
         self.title = title
-        self.favorite = favorite
+        self.favorite = "1" if favorite == "on" else "0"
         self.img_url = img_url

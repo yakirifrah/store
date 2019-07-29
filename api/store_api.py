@@ -50,6 +50,12 @@ def get_all_products():
     return result
 
 
+@get('/product/<id:int>')
+def get_product(id):
+    get_product = _db_adapter.get_product(id)
+    return get_product
+
+
 @post('/category')
 def add_category():
     result = _db_adapter.add_category()
@@ -59,6 +65,12 @@ def add_category():
 @delete('/category/<catId:path>')
 def delete_category(catId):
     _db_adapter.delete_category(catId)
+
+
+@delete('/product/<id:int>')
+def delete_product(id):
+    delete_product = _db_adapter.delete_product(id)
+    return delete_product
 
 
 @post('/product')
