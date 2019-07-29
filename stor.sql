@@ -1,6 +1,6 @@
+create database store;
 use store;
-drop table categories;
-drop table products;
+
 CREATE TABLE categories (
     id INT NOT NULL AUTO_INCREMENT,
     name VARCHAR(30) NOT NULL unique,

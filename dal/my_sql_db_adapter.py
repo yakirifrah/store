@@ -54,20 +54,19 @@ class MySqlDBAdapter(BaseDbAdapter):
                 products = json.loads(self.get_all_products())
                 for prod in products['PRODUCTS']:
                     if product.title != prod["title"]:
-                        add_product = 'INSERT INTO products (title,description,price,img_url,favorite,category_id) VALUES(%(title)s,%(description)s,%(price)s,%(img_url)s,%(category_id)s)'
+                        add_product = 'INSERT INTO products (title,description,price,img_url,favorite,category_id) VALUES(%(title)s,%(description)s,%(price)s,%(img_url)s,%(favorite)s,%(category_id)s)'
                     else:
                         title_exists = True
                         prod_id = prod['id']
                         update_product = 'UPDATE products set title = %(title)s,%(description)s,%(price)s,%(img_url)s,%(favorite)s WHERE id= %(prod_id)s'
                         break
                 if not title_exists:
-                    print(type(product.price))
                     print(product.price)
-                    cursor.execute(add_product, {"title": product.title, "description": product.description, "price": product.price,
-                                                 "img_url": product.img_url, "favorite": product.favorite, "category_id": product.category_id})
-                    # cursor.execute(add_product)
+                    print(add_product)
+                    cursor.execute(add_product, {"title": product.title, "description": product.description, "price": float(product.price),
+                                                 "img_url": product.img_url, "favorite": product.favorite, "category_id": int(product.category_id)})
+
                 else:
-                    print(type(product.price))
                     cursor.execute(update_product, {"title": product.title, "description": product.description,
                                                     "price": float(product.price), "img_url": product.img_url, "prod_id": int(prod_id)})
                 self._connection.commit()
